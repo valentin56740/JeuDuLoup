@@ -1,4 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://o7ise5esa53q"]
+[gd_scene load_steps=6 format=3 uid="uid://o7ise5esa53q"]
+
+[ext_resource type="Script" uid="uid://c7pkm2g3ffw76" path="res://loup.gd" id="1_xcdia"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ddwgs"]
 
@@ -7,7 +9,13 @@ albedo_color = Color(1, 0, 0, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_xcdia"]
+radius = 3.565
+
 [node name="Loup" type="RigidBody3D"]
+contact_monitor = true
+max_contacts_reported = 2
+script = ExtResource("1_xcdia")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -17,3 +25,12 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ddwgs")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_nhbfn")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="Zone" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("SphereShape3D_xcdia")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_HitBoxChase_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_HitBoxChase_body_exited"]
