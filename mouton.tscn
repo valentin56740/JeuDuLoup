@@ -8,6 +8,11 @@ albedo_color = Color(0.2166667, 1, 0, 1)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
 [node name="Mouton" type="RigidBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+contact_monitor = true
+max_contacts_reported = 2
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
