@@ -1,4 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://dvm0dcqgkax01"]
+[gd_scene load_steps=5 format=3 uid="uid://dvm0dcqgkax01"]
+
+[ext_resource type="Script" uid="uid://cg28hbpsxdtb2" path="res://mouton.gd" id="1_43wmm"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ddwgs"]
 
@@ -8,6 +10,10 @@ albedo_color = Color(0.2166667, 1, 0, 1)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
 [node name="Mouton" type="RigidBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+script = ExtResource("1_43wmm")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
