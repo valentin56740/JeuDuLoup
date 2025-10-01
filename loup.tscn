@@ -10,9 +10,12 @@ albedo_color = Color(1, 0, 0, 1)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_xcdia"]
-radius = 3.565
+radius = 10.172792
 
 [node name="Loup" type="RigidBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 2
 script = ExtResource("1_xcdia")

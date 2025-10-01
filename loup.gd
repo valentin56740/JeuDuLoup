@@ -1,10 +1,10 @@
 extends RigidBody3D
 
-@export var force = 15  # Force appliquée pour déplacer le loup
+@export var force = 25  # Force appliquée pour déplacer le loup
 @export var vitesse = 5.0  # Vitesse de déplacement du loup
 @export var sx: int = 100  # Taille de la zone sur l'axe X
 @export var sz: int = 100  # Taille de la zone sur l'axe Z
-@export var chase_radius = 10.0  # Rayon de détection pour la chasse
+@export var chase_radius = 20.0  # Rayon de détection pour la chasse
 
 var cibles = []  # Liste des moutons détectés
 

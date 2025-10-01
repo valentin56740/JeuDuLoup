@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://dvm0dcqgkax01"]
+[gd_scene load_steps=6 format=3 uid="uid://dvm0dcqgkax01"]
 
 [ext_resource type="Script" uid="uid://cg28hbpsxdtb2" path="res://mouton.gd" id="1_43wmm"]
+[ext_resource type="PackedScene" uid="uid://o7ise5esa53q" path="res://loup.tscn" id="2_b5lwy"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ddwgs"]
 
@@ -15,6 +16,8 @@ axis_lock_angular_y = true
 axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 2
+script = ExtResource("1_43wmm")
+scene_loup = ExtResource("2_b5lwy")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -24,3 +27,5 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ddwgs")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_nhbfn")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
