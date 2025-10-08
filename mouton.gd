@@ -14,8 +14,6 @@ var sz: float = 100
 var loup_proche: Node = null
 
 func _ready():
-	# Connecte les signaux de la zone de détection si tu utilises une Area3D
-	# Sinon tu peux gérer la détection dans _process en cherchant les loups proches
 	pass
 
 func _process(delta: float) -> void:
@@ -24,16 +22,16 @@ func _process(delta: float) -> void:
 	var loup_detecte: Node = null
 	var distance_min = flee_radius
 
-	for loup in loups:
-		var dist = global_position.distance_to(loup.global_position)
-		if dist < distance_min:
-			distance_min = dist
-			loup_detecte = loup
+	for loup in loups: #Parcour des loups (chaque loup)
+		var dist = global_position.distance_to(loup.global_position) #Distance entre un mouton et le loup 
+		if dist < distance_min: #Si la distance entre le loup et le mouton est plus petite que la distance min
+			distance_min = dist #alors la distance diminmum va etre mis a jour ( le nouveau loup le plus près)
+			loup_detecte = loup #loup detecté devient alors le loup 
 
 	# Si un loup est détecté proche => fuite
 	if loup_detecte:
-		var dir_fuite = (global_position - loup_detecte.global_position).normalized()
-		move_dir = dir_fuite
+		var dir_fuite = (global_position - loup_detecte.global_position).normalized() #On prends la position du mouton et on soustrait la postion du loup dtecter le plus proche et on en fait un vecteur 
+		move_dir = dir_fuite #La direction de mouvement va prendre le vecteur de fuite 
 		timer = direction_change_interval  # reset timer pour ne pas override la fuite
 	else:
 		# décrémente le timer
