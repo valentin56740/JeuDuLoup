@@ -18,6 +18,7 @@ height = 75.564
 
 [node name="Loup" type="RigidBody3D" node_paths=PackedStringArray("hitbox_chase1", "hitbox_chase2")]
 axis_lock_angular_x = true
+axis_lock_angular_y = true
 axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 2
