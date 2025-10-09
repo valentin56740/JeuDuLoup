@@ -1,81 +1,100 @@
 extends RigidBody3D
-
 @export var force = 25
 @export var vitesse = 10
+@export var search_rotation_speed = 1  # Vitesse de rotation en recherche
 @export var sx: int = 100
 @export var sz: int = 100
-@export var chase_radius = 20.0
-@export var en_vue = false
+var cibles = []
+var ciblesLoin = []
+var cible_lointaine_actuelle = null  # Garde la cible lointaine en mémoire
 
-@export var hitbox_chase1: Area3D
-@export var hitbox_chase2: Area3D
 
-var cibles_zone1 = []
-var cibles_zone2 = []
-
-func _ready():
-	hitbox_chase1.body_entered.connect(_on_HitBoxChase1_body_entered)
-	hitbox_chase1.body_exited.connect(_on_HitBoxChase1_body_exited)
-	hitbox_chase2.body_entered.connect(_on_HitBoxChase2_body_entered)
-	hitbox_chase2.body_exited.connect(_on_HitBoxChase2_body_exited)
-
-# Zone 1
-func _on_HitBoxChase1_body_entered(body):
+#Un mouton rentre dans la zone proche du mouton 
+func _on_zone_proche_body_entered(body):
 	if body.is_in_group("Mouton"):
-		if not cibles_zone1.has(body):
-			cibles_zone1.append(body)
-		en_vue = true
+		# Priorité à la zone proche
+		if not cibles.has(body):
+			cibles.append(body)
+		# Retirer de la zone lointaine
+		if ciblesLoin.has(body):
+			ciblesLoin.erase(body)
+		# Annuler la poursuite lointaine si un mouton entre en zone proche
+		cible_lointaine_actuelle = null
 
-func _on_HitBoxChase1_body_exited(body):
+func _on_zone_proche_body_exited(body):
 	if body.is_in_group("Mouton"):
-		cibles_zone1.erase(body)
-		if cibles_zone1.size() == 0 and cibles_zone2.size() == 0:
-			en_vue = false
+		cibles.erase(body)
 
-# Zone 2
-func _on_HitBoxChase2_body_entered(body):
+func _on_champs_loin_body_entered(body):
 	if body.is_in_group("Mouton"):
-		if not cibles_zone2.has(body):
-			cibles_zone2.append(body)
-		en_vue = true
+		# Ajouter seulement si pas déjà en zone proche
+		if not cibles.has(body) and not ciblesLoin.has(body):
+			ciblesLoin.append(body)
 
-func _on_HitBoxChase2_body_exited(body):
+func _on_champs_loin_body_exited(body):
 	if body.is_in_group("Mouton"):
-		cibles_zone2.erase(body)
-		if cibles_zone1.size() == 0 and cibles_zone2.size() == 0:
-			en_vue = false
+		ciblesLoin.erase(body)
+		# On continue de poursuivre même si le mouton sort de la zone lointaine 
+		#le seul moyen d'arreter est si un mouton est plus proche 
 
-func chase(target: Node):
-	var direction = (target.global_position - global_position).normalized()
-	linear_velocity = direction * vitesse
+func _mouton_plus_proche():
+	var mouton_plus_proche: Node = null
+	var distance_min = INF
+	
+	for mouton in cibles:
+		if is_instance_valid(mouton):
+			var dist = global_position.distance_to(mouton.global_position)
+			if dist < distance_min:
+				distance_min = dist
+				mouton_plus_proche = mouton
+	
+	return mouton_plus_proche
 
-func _process(delta: float) -> void:
-	# Empêche de sortir de la zone
+func _deplacement():
+	var delta = get_physics_process_delta_time()
+	
+	# Gestion des bords de la zone (wrap)
 	if position.x > sx / 2:
-		position.x = sx / 2
-	if position.x < -sx / 2:
 		position.x = -sx / 2
+	elif position.x < -sx / 2:
+		position.x = sx / 2
 	if position.z > sz / 2:
-		position.z = sz / 2
-	if position.z < -sz / 2:
 		position.z = -sz / 2
+	elif position.z < -sz / 2:
+		position.z = sz / 2
+	
+	# Priorité 1 : Mouton en zone proche - CHASE LE PLUS PROCHE
+	var cible = _mouton_plus_proche()
+	if cible != null and is_instance_valid(cible):
+		cible_lointaine_actuelle = null  # Annuler toute poursuite lointaine
+		var direction = (cible.global_position - global_position).normalized()
+		apply_central_force(direction * force)
+		return
+	
+	# Priorité 2 : Mouton en zone lointaine
+	# Si on a déjà une cible lointaine et qu'elle est encore valide, continuer de la poursuivre
+	if cible_lointaine_actuelle != null and is_instance_valid(cible_lointaine_actuelle):
+		var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
+		apply_central_force(direction * force)
+		return
+	
+	# Sinon, chercher une nouvelle cible lointaine
+	if ciblesLoin.size() > 0:
+		# Nettoyer les cibles invalides
+		for i in range(ciblesLoin.size() - 1, -1, -1):
+			if not is_instance_valid(ciblesLoin[i]):
+				ciblesLoin.remove_at(i)
+		
+		if ciblesLoin.size() > 0:
+			# Prendre le mouton le plus proche de la zone lointaine
+			cible_lointaine_actuelle = ciblesLoin[0]
+			var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
+			apply_central_force(direction * force)
+			return
+	
+	# Priorité 3 : Mode recherche - Tourner lentement
+	cible_lointaine_actuelle = null
+	rotation.y += search_rotation_speed * delta
 
-	# Combine toutes les cibles des deux zones
-	var toutes_cibles = cibles_zone1 + cibles_zone2
-
-	if toutes_cibles.size() > 0:
-		var closest_sheep = null
-		var closest_distance = chase_radius
-		for sheep in toutes_cibles:
-			if not is_instance_valid(sheep):
-				continue
-			var distance = global_position.distance_to(sheep.global_position)
-			if distance < closest_distance:
-				closest_sheep = sheep
-				closest_distance = distance
-		if closest_sheep != null:
-			chase(closest_sheep)
-		else:
-			linear_velocity = Vector3.ZERO
-	else:
-		linear_velocity = Vector3.ZERO
+func _physics_process(delta):
+	_deplacement()
