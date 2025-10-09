@@ -6,6 +6,15 @@ extends RigidBody3D
 @export var safe_speed: float = 15.0 # vitesse du mode SAFE
 @export var safe_distance: float = 30.0 # rayon de sécurité
 
+
+var grazing: bool = false
+var grazing_timer: float = 0.0
+var next_graze_time: float = 0.0
+
+@onready var animation_player = $Sheep_Model/AnimationPlayer 
+@onready var sheep_model = $Sheep_Model
+
+
 var dangerous_wolf: RigidBody3D = null
 var close_wolf: RigidBody3D = null
 
@@ -17,6 +26,13 @@ var timer: float = 0.0
 
 var sx: float = 100
 var sz: float = 100
+
+func _ready() -> void:
+	_set_next_graze_time()
+
+func _set_next_graze_time() -> void:
+	next_graze_time = randf_range(5.0, 15.0) # intervalle aléatoire entre 5 et 15s
+
 
 func _physics_process(delta: float) -> void:
 	match mode:
@@ -44,6 +60,13 @@ func _physics_process(delta: float) -> void:
 			else:
 				wander(delta)
 
+
+	# 🔄 Rotation fluide du modèle vers la direction de déplacement
+	if linear_velocity.length() > 0.1:
+		var dir = linear_velocity.normalized()
+		var target_yaw = atan2(dir.x, dir.z)
+		sheep_model.rotation.y = lerp_angle(sheep_model.rotation.y, target_yaw, delta * 5.0)
+		
 	# Gestion des bords
 	if position.x > sx / 2:
 		position.x = -sx / 2
@@ -88,6 +111,22 @@ func _on_area_danger_body_exited(body: Node3D) -> void:
 # -------------------------------
 
 func wander(delta: float) -> void:
+	if grazing:
+		grazing_timer -= delta
+		if grazing_timer <= 0.0:
+			grazing = false
+			_set_next_graze_time()
+		else:
+			return # reste immobile pendant le broutage
+
+	# Si pas en train de brouter, compte jusqu'au prochain broutage
+	next_graze_time -= delta
+	if next_graze_time <= 0.0:
+		_start_grazing()
+		return
+	
+
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Walk")
 	timer -= delta
 	if timer <= 0.0:
 		var angle = randf() * TAU
@@ -95,8 +134,17 @@ func wander(delta: float) -> void:
 		timer = direction_change_interval
 
 	apply_central_force(move_dir * wander_speed)
+	
+func _start_grazing() -> void:
+	grazing = true
+	grazing_timer = randf_range(2.0, 5.0) # durée de broutage
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Idle_Eating")
+
+	
+	
 
 func safe_avoid_wolf(wolf: RigidBody3D, delta: float) -> void:
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Walk")
 	var to_wolf = (wolf.global_position - global_position)
 	var dist = to_wolf.length()
 	if dist > safe_distance:
@@ -114,6 +162,7 @@ func safe_avoid_wolf(wolf: RigidBody3D, delta: float) -> void:
 	apply_central_force(final_dir * safe_speed)
 
 func flee_from_wolf(wolf: RigidBody3D, delta: float) -> void:
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Run")
 	var to_wolf = (wolf.global_position - global_position).normalized()
 	var wolf_dir = wolf.linear_velocity.normalized()
 	var sheep_dir = move_dir.normalized()
