@@ -6,11 +6,11 @@ extends RigidBody3D
 @export var safe_speed: float = 15.0 # vitesse du mode SAFE
 @export var safe_distance: float = 30.0 # rayon de sécurité
 
-var loup_dangereux: RigidBody3D = null
-var loup_proche: RigidBody3D = null
+var dangerous_wolf: RigidBody3D = null
+var close_wolf: RigidBody3D = null
 
-enum Mode { WANDER, SAFE, FLEE }
-var mode = Mode.WANDER
+enum Mode { WANDER, SAFE, FLEE } # Les différents mode des moutons 
+var mode = Mode.WANDER # Par défaut le mode errement 
 
 var move_dir: Vector3 = Vector3.ZERO
 var timer: float = 0.0
@@ -21,23 +21,25 @@ var sz: float = 100
 func _physics_process(delta: float) -> void:
 	match mode:
 		Mode.FLEE:
-			if is_instance_valid(loup_proche):
-				flee_from_wolf(loup_proche, delta)
+			if is_instance_valid(close_wolf):
+				flee_from_wolf(close_wolf, delta) # Le mouton se fait agresser par un loup -> il fuit 
 			else:
-				mode = Mode.SAFE if is_instance_valid(loup_dangereux) else Mode.WANDER
+				# Pas d'agression mais le loup reste dans une distance dangeureuse -> Le mouton continue à s'éloigner sans paniquer
+				if is_instance_valid(dangerous_wolf): mode = Mode.SAFE 
+				else: Mode.WANDER # Le mouton n'est pas inquiété il peut errer tranquillement 
 
 		Mode.SAFE:
-			if is_instance_valid(loup_proche):
+			if is_instance_valid(close_wolf):
 				mode = Mode.FLEE
-			elif is_instance_valid(loup_dangereux):
-				safe_avoid_wolf(loup_dangereux, delta)
+			elif is_instance_valid(dangerous_wolf):
+				safe_avoid_wolf(dangerous_wolf, delta)
 			else:
 				mode = Mode.WANDER
 
 		Mode.WANDER:
-			if is_instance_valid(loup_proche):
+			if is_instance_valid(close_wolf):
 				mode = Mode.FLEE
-			elif is_instance_valid(loup_dangereux):
+			elif is_instance_valid(dangerous_wolf):
 				mode = Mode.SAFE
 			else:
 				wander(delta)
@@ -60,25 +62,25 @@ func _physics_process(delta: float) -> void:
 
 func _on_area_safe_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Loup"):
-		loup_dangereux = body
+		dangerous_wolf = body
 		if mode == Mode.WANDER:
 			mode = Mode.SAFE
 
 func _on_area_safe_body_exited(body: Node3D) -> void:
-	if body.is_in_group("Loup") and body == loup_dangereux:
-		loup_dangereux = null
+	if body.is_in_group("Loup") and body == dangerous_wolf:
+		dangerous_wolf = null
 		if mode == Mode.SAFE:
 			mode = Mode.WANDER
 
 func _on_area_danger_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Loup"):
-		loup_proche = body
+		close_wolf = body
 		mode = Mode.FLEE
 
 func _on_area_danger_body_exited(body: Node3D) -> void:
-	if body.is_in_group("Loup") and body == loup_proche:
-		loup_proche = null
-		mode = Mode.SAFE if is_instance_valid(loup_dangereux) else Mode.WANDER
+	if body.is_in_group("Loup") and body == close_wolf:
+		close_wolf = null
+		mode = Mode.SAFE if is_instance_valid(dangerous_wolf) else Mode.WANDER
 
 
 # -------------------------------
