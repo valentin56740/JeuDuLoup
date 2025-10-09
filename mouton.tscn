@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://dvm0dcqgkax01"]
+[gd_scene load_steps=7 format=3 uid="uid://dvm0dcqgkax01"]
 
 [ext_resource type="Script" uid="uid://cg28hbpsxdtb2" path="res://mouton.gd" id="1_43wmm"]
-[ext_resource type="PackedScene" uid="uid://o7ise5esa53q" path="res://loup.tscn" id="2_b5lwy"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ddwgs"]
 
@@ -10,6 +9,12 @@ albedo_color = Color(0.2166667, 1, 0, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lwy"]
+radius = 5.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_43wmm"]
+radius = 30.0
+
 [node name="Mouton" type="RigidBody3D"]
 axis_lock_angular_x = true
 axis_lock_angular_y = true
@@ -17,7 +22,6 @@ axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 2
 script = ExtResource("1_43wmm")
-scene_loup = ExtResource("2_b5lwy")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -28,4 +32,20 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ddwgs")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_nhbfn")
 
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CylinderShape3D_b5lwy")
+
+[node name="Save" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Save"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CylinderShape3D_43wmm")
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_danger_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_danger_body_exited"]
+[connection signal="body_entered" from="Save" to="." method="_on_area_safe_body_entered"]
+[connection signal="body_exited" from="Save" to="." method="_on_area_safe_body_exited"]
