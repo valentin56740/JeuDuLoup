@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://c8v6g3mgv4m5n" path="res://Models/Sheep.glb" id="2_b5lwy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3vj0s"]
-size = Vector3(1.17, 1.8, 3.3214123)
+size = Vector3(1.17, 1.8, 2.49)
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lwy"]
 radius = 5.0
@@ -14,15 +14,16 @@ radius = 30.0
 
 [node name="Mouton" type="RigidBody3D"]
 axis_lock_angular_x = true
+axis_lock_angular_y = true
 axis_lock_angular_z = true
 contact_monitor = true
-max_contacts_reported = 3
+max_contacts_reported = 2
 script = ExtResource("1_43wmm")
 
 [node name="Sheep_Model" parent="." instance=ExtResource("2_b5lwy")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0.10821223)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("BoxShape3D_3vj0s")
 
 [node name="Area3D" type="Area3D" parent="."]

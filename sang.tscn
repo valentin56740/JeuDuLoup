@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://ch2stkum1nrii"]
+
+[ext_resource type="PackedScene" uid="uid://bqvcstyfkah85" path="res://Blood Splat.glb" id="1_8nuxy"]
+
+[node name="Root Scene" instance=ExtResource("1_8nuxy")]
