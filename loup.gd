@@ -8,6 +8,7 @@ var cibles = []
 var ciblesLoin = []
 var cible_lointaine_actuelle = null  # Garde la cible lointaine en mémoire
 
+@onready var animation_player = $WolfModel/AnimationPlayer
 
 #Un mouton rentre dans la zone proche du mouton 
 func _on_zone_proche_body_entered(body):
@@ -52,7 +53,7 @@ func _mouton_plus_proche():
 
 func _deplacement():
 	var delta = get_physics_process_delta_time()
-	
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Run")
 	# Gestion des bords de la zone (wrap)
 	if position.x > sx / 2:
 		position.x = -sx / 2

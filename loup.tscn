@@ -1,11 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://o7ise5esa53q"]
+[gd_scene load_steps=6 format=3 uid="uid://o7ise5esa53q"]
 
 [ext_resource type="Script" uid="uid://c7pkm2g3ffw76" path="res://loup.gd" id="1_xcdia"]
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_ddwgs"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ddwgs"]
-albedo_color = Color(1, 0, 0, 1)
+[ext_resource type="PackedScene" uid="uid://btyye0aqrfc73" path="res://Wolf.glb" id="2_3elve"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nhbfn"]
 
@@ -23,10 +19,8 @@ contact_monitor = true
 max_contacts_reported = 2
 script = ExtResource("1_xcdia")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-mesh = SubResource("CapsuleMesh_ddwgs")
-surface_material_override/0 = SubResource("StandardMaterial3D_ddwgs")
+[node name="WolfModel" parent="." instance=ExtResource("2_3elve")]
+transform = Transform3D(-0.9999369, 0, -0.01123973, 0, 1, 0, 0.01123973, 0, -0.9999369, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
