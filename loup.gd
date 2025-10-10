@@ -1,25 +1,30 @@
 extends RigidBody3D
-@export var force = 25
-@export var vitesse = 10
-@export var search_rotation_speed = 1  # Vitesse de rotation en recherche
-@export var rotation_speed = 5.0  # Vitesse de rotation vers la cible
+@export var force = 45
+@export var vitesse_max = 30  # Vitesse maximale
+@export var search_rotation_speed = 1
+@export var rotation_speed = 5.0
 @export var sx: int = 100
 @export var sz: int = 100
+@export var distance_arret = 2.0  # Distance à laquelle le loup ralentit
+
 var cibles = []
 var ciblesLoin = []
-var cible_lointaine_actuelle = null  # Garde la cible lointaine en mémoire
+var cible_lointaine_actuelle = null
 @onready var animation_player = $WolfModel/AnimationPlayer
+@export var sang_scene : PackedScene = preload("res://sang.tscn")
+@export var loup_scene : PackedScene = preload("res://loup.tscn")
 
-#Un mouton rentre dans la zone proche du mouton 
+func _ready():
+	# Augmenter le damping pour réduire le dérapage
+	linear_damp = 2.0  # Freine naturellement le mouvement
+	angular_damp = 5.0  # Réduit la rotation incontrôlée
+
 func _on_zone_proche_body_entered(body):
 	if body.is_in_group("Mouton"):
-		# Priorité à la zone proche
 		if not cibles.has(body):
 			cibles.append(body)
-		# Retirer de la zone lointaine
 		if ciblesLoin.has(body):
 			ciblesLoin.erase(body)
-		# Annuler la poursuite lointaine si un mouton entre en zone proche
 		cible_lointaine_actuelle = null
 
 func _on_zone_proche_body_exited(body):
@@ -28,15 +33,12 @@ func _on_zone_proche_body_exited(body):
 
 func _on_champs_loin_body_entered(body):
 	if body.is_in_group("Mouton"):
-		# Ajouter seulement si pas déjà en zone proche
 		if not cibles.has(body) and not ciblesLoin.has(body):
 			ciblesLoin.append(body)
 
 func _on_champs_loin_body_exited(body):
 	if body.is_in_group("Mouton"):
 		ciblesLoin.erase(body)
-		# On continue de poursuivre même si le mouton sort de la zone lointaine 
-		#le seul moyen d'arreter est si un mouton est plus proche 
 
 func _mouton_plus_proche():
 	var mouton_plus_proche: Node = null
@@ -52,34 +54,27 @@ func _mouton_plus_proche():
 	return mouton_plus_proche
 
 func _tourner_vers_cible(cible_position: Vector3, delta: float):
-	# Calculer la direction vers la cible (seulement sur le plan horizontal)
 	var direction = cible_position - global_position
-	direction.y = 0  # Ignorer la composante verticale
+	direction.y = 0
 	
-	if direction.length() > 0.01:  # Éviter les divisions par zéro
+	if direction.length() > 0.01:
 		direction = direction.normalized()
-		
-		# Calculer l'angle cible
 		var angle_cible = atan2(direction.x, direction.z)
-		
-		# Interpoler la rotation actuelle vers l'angle cible
 		var angle_actuel = rotation.y
 		var angle_diff = angle_cible - angle_actuel
 		
-		# Normaliser l'angle entre -PI et PI
 		while angle_diff > PI:
 			angle_diff -= 2 * PI
 		while angle_diff < -PI:
 			angle_diff += 2 * PI
 		
-		# Rotation progressive
 		rotation.y += sign(angle_diff) * min(abs(angle_diff), rotation_speed * delta)
 
 func _deplacement():
 	var delta = get_physics_process_delta_time()
 	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Run")
 	
-	# Gestion des bords de la zone (wrap)
+	# Wrap aux bords
 	if position.x > sx / 2:
 		position.x = -sx / 2
 	elif position.x < -sx / 2:
@@ -89,41 +84,58 @@ func _deplacement():
 	elif position.z < -sz / 2:
 		position.z = sz / 2
 	
-	# Priorité 1 : Mouton en zone proche - CHASE LE PLUS PROCHE
+	# Limiter la vitesse horizontale
+	var vitesse_horizontale = Vector3(linear_velocity.x, 0, linear_velocity.z)
+	if vitesse_horizontale.length() > vitesse_max:
+		var vitesse_limitee = vitesse_horizontale.normalized() * vitesse_max
+		linear_velocity.x = vitesse_limitee.x
+		linear_velocity.z = vitesse_limitee.z
+	
+	# Priorité 1 : Mouton proche
 	var cible = _mouton_plus_proche()
 	if cible != null and is_instance_valid(cible):
-		cible_lointaine_actuelle = null  # Annuler toute poursuite lointaine
+		cible_lointaine_actuelle = null
+		var distance = global_position.distance_to(cible.global_position)
 		_tourner_vers_cible(cible.global_position, delta)
+		
+		# Réduire la force quand on est proche pour éviter de tourner autour
+		var multiplicateur_force = 1.0
+		if distance < distance_arret:
+			multiplicateur_force = distance / distance_arret
+		
 		var direction = (cible.global_position - global_position).normalized()
-		apply_central_force(direction * force)
+		apply_central_force(direction * force * multiplicateur_force)
 		return
 	
-	# Priorité 2 : Mouton en zone lointaine
-	# Si on a déjà une cible lointaine et qu'elle est encore valide, continuer de la poursuivre
+	# Priorité 2 : Mouton lointain
 	if cible_lointaine_actuelle != null and is_instance_valid(cible_lointaine_actuelle):
 		_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
 		var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
 		apply_central_force(direction * force)
 		return
 	
-	# Sinon, chercher une nouvelle cible lointaine
 	if ciblesLoin.size() > 0:
-		# Nettoyer les cibles invalides
 		for i in range(ciblesLoin.size() - 1, -1, -1):
 			if not is_instance_valid(ciblesLoin[i]):
 				ciblesLoin.remove_at(i)
 		
 		if ciblesLoin.size() > 0:
-			# Prendre le mouton le plus proche de la zone lointaine
 			cible_lointaine_actuelle = ciblesLoin[0]
 			_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
 			var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
 			apply_central_force(direction * force)
 			return
 	
-	# Priorité 3 : Mode recherche - Tourner lentement
+	# Mode recherche
 	cible_lointaine_actuelle = null
 	rotation.y += search_rotation_speed * delta
+	
+func _on_body_entered(body: Node3D) -> void:
+	if body.is_in_group("Mouton"):
+		var sang_instance = sang_scene.instantiate()
+		sang_instance.global_position = body.global_position
+		get_parent().add_child(sang_instance)
+		body.queue_free()
 
 func _physics_process(delta):
 	_deplacement()

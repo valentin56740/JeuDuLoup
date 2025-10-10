@@ -39,6 +39,7 @@ shape = SubResource("SphereShape3D_xcdia")
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 2, 40.016235)
 shape = SubResource("CapsuleShape3D_xcdia")
 
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="body_entered" from="ZoneProche" to="." method="_on_zone_proche_body_entered"]
 [connection signal="body_exited" from="ZoneProche" to="." method="_on_zone_proche_body_exited"]
 [connection signal="body_entered" from="ChampsLoin" to="." method="_on_champs_loin_body_entered"]

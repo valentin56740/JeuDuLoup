@@ -7,7 +7,7 @@ extends RigidBody3D
 @export var safe_distance: float = 30.0 # rayon de sécurité
 
 @export var sang_scene : PackedScene = preload("res://sang.tscn")
-
+@export var loup_scene : PackedScene = preload("res://loup.tscn")
 
 var grazing: bool = false
 var grazing_timer: float = 0.0
@@ -185,20 +185,6 @@ func flee_from_wolf(wolf: RigidBody3D, delta: float) -> void:
 
 
 
-func _on_body_entered(body: Node3D) -> void:
-	print("Test1")
-	
-	if body.is_in_group("Mouton"):  # Vérifie si le corps est un mouton
-		print("Test2")
+
 		
-		# Instancier la scène de sang
-		var sang_instance = sang_scene.instantiate()  # Crée une instance de la scène de sang
 		
-		# Positionner la scène de sang à la position du mouton
-		sang_instance.global_position = body.global_position
-		
-		# Ajouter l'instance de sang à la scène principale
-		get_parent().add_child(sang_instance)  # L'ajoute au parent du mouton (dans la scène principale)
-		
-		# Supprimer le mouton
-		body.queue_free()
