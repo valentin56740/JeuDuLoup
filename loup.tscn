@@ -11,7 +11,7 @@ radius = 10.172792
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xcdia"]
 radius = 7.409
-height = 76.197525
+height = 162.9151
 
 [node name="Loup" type="RigidBody3D"]
 axis_lock_angular_x = true
@@ -36,7 +36,7 @@ shape = SubResource("SphereShape3D_xcdia")
 [node name="ChampsLoin" type="Area3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ChampsLoin"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 2, 40.016235)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 1.9999981, 83.37502)
 shape = SubResource("CapsuleShape3D_xcdia")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]

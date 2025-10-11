@@ -69,16 +69,6 @@ func _physics_process(delta: float) -> void:
 		var target_yaw = atan2(dir.x, dir.z)
 		sheep_model.rotation.y = lerp_angle(sheep_model.rotation.y, target_yaw, delta * 5.0)
 		
-	# Gestion des bords
-	if position.x > sx / 2:
-		position.x = -sx / 2
-	elif position.x < -sx / 2:
-		position.x = sx / 2
-
-	if position.z > sz / 2:
-		position.z = -sz / 2
-	elif position.z < -sz / 2:
-		position.z = sz / 2
 
 
 # -------------------------------

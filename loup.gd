@@ -74,15 +74,15 @@ func _deplacement():
 	var delta = get_physics_process_delta_time()
 	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Run")
 	
-	# Wrap aux bords
-	if position.x > sx / 2:
-		position.x = -sx / 2
-	elif position.x < -sx / 2:
-		position.x = sx / 2
-	if position.z > sz / 2:
-		position.z = -sz / 2
-	elif position.z < -sz / 2:
-		position.z = sz / 2
+	## Wrap aux bords
+	#if position.x > sx / 2:
+		#position.x = -sx / 2
+	#elif position.x < -sx / 2:
+		#position.x = sx / 2
+	#if position.z > sz / 2:
+		#position.z = -sz / 2
+	#elif position.z < -sz / 2:
+		#position.z = sz / 2
 	
 	# Limiter la vitesse horizontale
 	var vitesse_horizontale = Vector3(linear_velocity.x, 0, linear_velocity.z)
@@ -94,6 +94,7 @@ func _deplacement():
 	# Priorité 1 : Mouton proche
 	var cible = _mouton_plus_proche()
 	if cible != null and is_instance_valid(cible):
+		print("Cas 1 : mouton proche")
 		cible_lointaine_actuelle = null
 		var distance = global_position.distance_to(cible.global_position)
 		_tourner_vers_cible(cible.global_position, delta)
@@ -110,6 +111,7 @@ func _deplacement():
 	# Priorité 2 : Mouton lointain
 	if cible_lointaine_actuelle != null and is_instance_valid(cible_lointaine_actuelle):
 		_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
+		print("Cas 2 : mouton loin")
 		var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
 		apply_central_force(direction * force)
 		return
@@ -128,12 +130,13 @@ func _deplacement():
 	
 	# Mode recherche
 	cible_lointaine_actuelle = null
+	print("Recherche")
 	rotation.y += search_rotation_speed * delta
 	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Idle")
 	
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Mouton"):
-		var sang_instance = sang_scene.instantiate()
+		var sang_instance = loup_scene.instantiate()
 		sang_instance.global_position = body.global_position
 		get_parent().add_child(sang_instance)
 		body.queue_free()
