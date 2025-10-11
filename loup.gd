@@ -6,18 +6,69 @@ extends RigidBody3D
 @export var sx: int = 100
 @export var sz: int = 100
 @export var distance_arret = 2.0  # Distance à laquelle le loup ralentit
+@export var coordination_active = true  # Toggle pour activer/désactiver la coordination
 
 var cibles = []
 var ciblesLoin = []
 var cible_lointaine_actuelle = null
+var cible_actuelle = null  # La cible que ce loup poursuit activement
 @onready var animation_player = $WolfModel/AnimationPlayer
 @export var sang_scene : PackedScene = preload("res://sang.tscn")
 @export var loup_scene : PackedScene = preload("res://loup.tscn")
+
+# Dictionnaire statique partagé entre tous les loups : mouton -> loup qui le chasse
+static var moutons_reserves = {}
 
 func _ready():
 	# Augmenter le damping pour réduire le dérapage
 	linear_damp = 2.0  # Freine naturellement le mouvement
 	angular_damp = 5.0  # Réduit la rotation incontrôlée
+	
+	# Ajouter ce loup au groupe "Loup" pour le retrouver facilement
+	add_to_group("Loup")
+
+func _exit_tree():
+	# Libérer la cible si ce loup disparaît
+	if cible_actuelle != null and is_instance_valid(cible_actuelle):
+		_liberer_cible(cible_actuelle)
+
+func _reserver_cible(mouton: Node) -> bool:
+	"""Tente de réserver un mouton. Retourne true si réussi."""
+	if not coordination_active:
+		return true  # Si coordination désactivée, toujours autoriser
+	
+	if not moutons_reserves.has(mouton) or not is_instance_valid(moutons_reserves[mouton]):
+		moutons_reserves[mouton] = self
+		return true
+	
+	# Vérifier si le loup qui a réservé existe encore
+	var loup_reservant = moutons_reserves[mouton]
+	if not is_instance_valid(loup_reservant):
+		moutons_reserves[mouton] = self
+		return true
+	
+	# Le mouton est déjà réservé par un autre loup
+	return false
+
+func _liberer_cible(mouton: Node):
+	"""Libère la réservation d'un mouton."""
+	if moutons_reserves.has(mouton) and moutons_reserves[mouton] == self:
+		moutons_reserves.erase(mouton)
+
+func _est_reserve_par_autre(mouton: Node) -> bool:
+	"""Vérifie si un mouton est réservé par un autre loup."""
+	if not coordination_active:
+		return false
+	
+	if not moutons_reserves.has(mouton):
+		return false
+	
+	var loup_reservant = moutons_reserves[mouton]
+	if not is_instance_valid(loup_reservant):
+		moutons_reserves.erase(mouton)
+		return false
+	
+	return loup_reservant != self
 
 func _on_zone_proche_body_entered(body):
 	if body.is_in_group("Mouton"):
@@ -46,6 +97,10 @@ func _mouton_plus_proche():
 	
 	for mouton in cibles:
 		if is_instance_valid(mouton):
+			# Ignorer les moutons déjà réservés par d'autres loups
+			if _est_reserve_par_autre(mouton):
+				continue
+			
 			var dist = global_position.distance_to(mouton.global_position)
 			if dist < distance_min:
 				distance_min = dist
@@ -74,16 +129,6 @@ func _deplacement():
 	var delta = get_physics_process_delta_time()
 	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Run")
 	
-	## Wrap aux bords
-	#if position.x > sx / 2:
-		#position.x = -sx / 2
-	#elif position.x < -sx / 2:
-		#position.x = sx / 2
-	#if position.z > sz / 2:
-		#position.z = -sz / 2
-	#elif position.z < -sz / 2:
-		#position.z = sz / 2
-	
 	# Limiter la vitesse horizontale
 	var vitesse_horizontale = Vector3(linear_velocity.x, 0, linear_velocity.z)
 	if vitesse_horizontale.length() > vitesse_max:
@@ -94,27 +139,48 @@ func _deplacement():
 	# Priorité 1 : Mouton proche
 	var cible = _mouton_plus_proche()
 	if cible != null and is_instance_valid(cible):
-		print("Cas 1 : mouton proche")
-		cible_lointaine_actuelle = null
-		var distance = global_position.distance_to(cible.global_position)
-		_tourner_vers_cible(cible.global_position, delta)
+		# Si on change de cible, libérer l'ancienne et réserver la nouvelle
+		if cible_actuelle != cible:
+			if cible_actuelle != null:
+				_liberer_cible(cible_actuelle)
+			
+			if _reserver_cible(cible):
+				cible_actuelle = cible
+			else:
+				# La cible est réservée, chercher ailleurs
+				cible_actuelle = null
+				cible = null
 		
-		# Réduire la force quand on est proche pour éviter de tourner autour
-		var multiplicateur_force = 1.0
-		if distance < distance_arret:
-			multiplicateur_force = distance / distance_arret
-		
-		var direction = (cible.global_position - global_position).normalized()
-		apply_central_force(direction * force * multiplicateur_force)
-		return
+		if cible != null:
+			print("Cas 1 : mouton proche")
+			cible_lointaine_actuelle = null
+			var distance = global_position.distance_to(cible.global_position)
+			_tourner_vers_cible(cible.global_position, delta)
+			
+			# Réduire la force quand on est proche pour éviter de tourner autour
+			var multiplicateur_force = 1.0
+			if distance < distance_arret:
+				multiplicateur_force = distance / distance_arret
+			
+			var direction = (cible.global_position - global_position).normalized()
+			apply_central_force(direction * force * multiplicateur_force)
+			return
+	else:
+		# Plus de cible proche, libérer la réservation
+		if cible_actuelle != null:
+			_liberer_cible(cible_actuelle)
+			cible_actuelle = null
 	
 	# Priorité 2 : Mouton lointain
 	if cible_lointaine_actuelle != null and is_instance_valid(cible_lointaine_actuelle):
-		_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
-		print("Cas 2 : mouton loin")
-		var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
-		apply_central_force(direction * force)
-		return
+		if not _est_reserve_par_autre(cible_lointaine_actuelle):
+			_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
+			print("Cas 2 : mouton loin")
+			var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
+			apply_central_force(direction * force)
+			return
+		else:
+			cible_lointaine_actuelle = null
 	
 	if ciblesLoin.size() > 0:
 		for i in range(ciblesLoin.size() - 1, -1, -1):
@@ -122,11 +188,14 @@ func _deplacement():
 				ciblesLoin.remove_at(i)
 		
 		if ciblesLoin.size() > 0:
-			cible_lointaine_actuelle = ciblesLoin[0]
-			_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
-			var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
-			apply_central_force(direction * force)
-			return
+			# Chercher un mouton lointain non réservé
+			for mouton in ciblesLoin:
+				if not _est_reserve_par_autre(mouton):
+					cible_lointaine_actuelle = mouton
+					_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
+					var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
+					apply_central_force(direction * force)
+					return
 	
 	# Mode recherche
 	cible_lointaine_actuelle = null
@@ -136,6 +205,12 @@ func _deplacement():
 	
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Mouton"):
+		# Libérer la réservation avant de supprimer le mouton
+		if moutons_reserves.has(body):
+			moutons_reserves.erase(body)
+		if cible_actuelle == body:
+			cible_actuelle = null
+		
 		var sang_instance = loup_scene.instantiate()
 		sang_instance.global_position = body.global_position
 		get_parent().add_child(sang_instance)
