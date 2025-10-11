@@ -129,6 +129,7 @@ func _deplacement():
 	# Mode recherche
 	cible_lointaine_actuelle = null
 	rotation.y += search_rotation_speed * delta
+	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Idle")
 	
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Mouton"):
