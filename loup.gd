@@ -3,100 +3,76 @@
 extends RigidBody3D
 
 # ===== PARAMÈTRES EXPORTÉS (modifiables dans l'éditeur) =====
-@export var force = 45  # Force appliquée pour le déplacement du loup
-@export var vitesse_max = 30  # Vitesse maximale du loup (empêche une accélération infinie)
-@export var search_rotation_speed = 1  # Vitesse de rotation en mode recherche
-@export var rotation_speed = 5.0  # Vitesse de rotation vers une cible
-@export var distance_arret = 2.0  # Distance à laquelle le loup ralentit pour éviter de dépasser la cible
-@export var coordination_active = true  # Active/désactive le système de réservation des moutons entre loups
+# ===== PARAMÈTRES EXPORTÉS (modifiables dans l'éditeur) =====
+@export var force = 45
+@export var vitesse_max = 30
+@export var search_rotation_speed = 1
+@export var rotation_speed = 5.0
+@export var distance_arret = 2.0
 
 # ===== VARIABLES D'INSTANCE =====
-var cibles = []  # Liste des moutons dans la zone proche
-var ciblesLoin = []  # Liste des moutons dans la zone lointaine
-var cible_lointaine_actuelle = null  # Mouton lointain actuellement visé
-var cible_actuelle = null  # Mouton proche actuellement poursuivi (réservé par ce loup)
+var cibles = []
+var ciblesLoin = []
+var cible_lointaine_actuelle = null
+var cible_actuelle = null
 
 # ===== RÉFÉRENCES AUX NŒUDS =====
-@onready var animation_player = $WolfModel/AnimationPlayer  # Contrôleur d'animations du loup
+@onready var animation_player = $WolfModel/AnimationPlayer
 
 # ===== SCÈNES PRÉCHARGÉES =====
-@export var sang_scene : PackedScene = preload("res://sang.tscn")  # Scène de l'effet de sang
-@export var loup_scene : PackedScene = preload("res://loup.tscn")  # Scène du loup (pour reproduction)
+@export var sang_scene : PackedScene = preload("res://sang.tscn")
+@export var loup_scene : PackedScene = preload("res://loup.tscn")
 
 # ===== SYSTÈME DE COORDINATION ENTRE LOUPS =====
-# Dictionnaire statique (partagé entre toutes les instances de loups)
-# Clé : référence au mouton | Valeur : référence au loup qui le chasse
-# Permet d'éviter que plusieurs loups ne poursuivent le même mouton
 static var moutons_reserves = {}
 
 # ===== INITIALISATION =====
 func _ready():
-	# Configure l'amortissement pour un mouvement plus réaliste
-	linear_damp = 2.0  # Freine naturellement le mouvement linéaire (évite le dérapage)
-	angular_damp = 5.0  # Réduit la rotation incontrôlée (stabilise l'orientation)
-	
-	# Ajoute ce loup au groupe "Loup" pour pouvoir le retrouver facilement
-	# (utile pour les requêtes de groupe dans Godot)
+	linear_damp = 2.0
+	angular_damp = 5.0
 	add_to_group("Loup")
 
 # ===== NETTOYAGE À LA DESTRUCTION =====
 func _exit_tree():
-	# Quand le loup est supprimé de la scène, libère sa cible
-	# pour qu'un autre loup puisse la poursuivre
 	if cible_actuelle != null and is_instance_valid(cible_actuelle):
 		_liberer_cible(cible_actuelle)
 
 # ===== SYSTÈME DE RÉSERVATION DES CIBLES =====
 
-# Tente de réserver un mouton pour ce loup
-# Retourne true si la réservation réussit, false sinon
 func _reserver_cible(mouton: Node) -> bool:
-	# Si la coordination est désactivée, autoriser toujours (comportement simple)
-	if not coordination_active:
+	# Lit directement depuis GlobalSettings à chaque appel
+	if not GlobalSettings.coordination_active:
 		return true
 	
-	# Si le mouton n'est pas encore réservé ou si le loup réservant n'existe plus
 	if not moutons_reserves.has(mouton) or not is_instance_valid(moutons_reserves[mouton]):
-		moutons_reserves[mouton] = self  # Réserver pour ce loup
-		return true
-	
-	# Vérifier si le loup qui a réservé existe encore
-	var loup_reservant = moutons_reserves[mouton]
-	if not is_instance_valid(loup_reservant):
-		# Le loup réservant a disparu, on peut récupérer la cible
 		moutons_reserves[mouton] = self
 		return true
 	
-	# Le mouton est déjà réservé par un autre loup valide
+	var loup_reservant = moutons_reserves[mouton]
+	if not is_instance_valid(loup_reservant):
+		moutons_reserves[mouton] = self
+		return true
+	
 	return false
 
-# Libère la réservation d'un mouton
-# Permet à d'autres loups de le poursuivre
 func _liberer_cible(mouton: Node):
-	# Vérifie que c'est bien ce loup qui a réservé le mouton avant de libérer
 	if moutons_reserves.has(mouton) and moutons_reserves[mouton] == self:
 		moutons_reserves.erase(mouton)
 
-# Vérifie si un mouton est réservé par un autre loup
-# Retourne true si un autre loup le poursuit déjà
 func _est_reserve_par_autre(mouton: Node) -> bool:
-	# Si coordination désactivée, aucun mouton n'est considéré comme réservé
-	if not coordination_active:
+	# Lit directement depuis GlobalSettings à chaque appel
+	if not GlobalSettings.coordination_active:
 		return false
 	
-	# Si le mouton n'est pas dans le dictionnaire, il n'est pas réservé
 	if not moutons_reserves.has(mouton):
 		return false
 	
-	# Récupère le loup qui a réservé ce mouton
 	var loup_reservant = moutons_reserves[mouton]
 	
-	# Si le loup réservant n'existe plus, nettoyer la réservation
 	if not is_instance_valid(loup_reservant):
 		moutons_reserves.erase(mouton)
 		return false
 	
-	# Retourne true si un autre loup (pas celui-ci) a réservé le mouton
 	return loup_reservant != self
 
 # ===== DÉTECTION DES MOUTONS (ZONE PROCHE) =====
@@ -305,23 +281,30 @@ func _deplacement():
 # Appelé quand le loup entre en collision avec un autre corps
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Mouton"):
-		# Le loup a attrapé un mouton !
-		
-		# Libère la réservation du mouton
+		# Libère la réservation
 		if moutons_reserves.has(body):
 			moutons_reserves.erase(body)
 		
-		# Réinitialise la cible actuelle
 		if cible_actuelle == body:
 			cible_actuelle = null
 		
-		# Crée un nouveau loup à la position du mouton mangé (reproduction)
-		var sang_instance = loup_scene.instantiate()
-		sang_instance.global_position = body.global_position
-		get_parent().add_child(sang_instance)
+		# Lit directement depuis GlobalSettings au moment de la collision
+		if GlobalSettings.reproduction_active:
+			# Mode reproduction : crée un nouveau loup
+			var nouveau_loup = loup_scene.instantiate()
+			nouveau_loup.global_position = body.global_position
+			get_parent().add_child(nouveau_loup)
+			print("🐺 Reproduction : un nouveau loup est né !")
+		else:
+			# Mode sang : affiche une flaque de sang
+			var sang_instance = sang_scene.instantiate()
+			sang_instance.global_position = body.global_position
+			get_parent().add_child(sang_instance)
+			print("🩸 Sang : le mouton a été mangé.")
 		
-		# Supprime le mouton de la scène
+		# Supprime le mouton
 		body.queue_free()
+
 
 # ===== BOUCLE PHYSIQUE =====
 
