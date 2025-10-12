@@ -7,16 +7,19 @@
 size = Vector3(1.17, 1.8, 3.3214123)
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lwy"]
-radius = 5.0
+radius = 10.0
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_43wmm"]
-radius = 30.0
+radius = 40.0
 
 [node name="Mouton" type="RigidBody3D"]
 axis_lock_angular_x = true
+axis_lock_angular_y = true
 axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 3
+linear_damp_mode = 1
+linear_damp = 0.525
 script = ExtResource("1_43wmm")
 
 [node name="Sheep_Model" parent="." instance=ExtResource("2_b5lwy")]
