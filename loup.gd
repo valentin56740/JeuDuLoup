@@ -294,7 +294,7 @@ func _on_body_entered(body: Node3D) -> void:
 			var nouveau_loup = loup_scene.instantiate()
 			nouveau_loup.global_position = body.global_position
 			get_parent().add_child(nouveau_loup)
-			print("🐺 Reproduction : un nouveau loup est né !")
+			print(" Reproduction : un nouveau loup est né !")
 		else:
 			# Mode sang : affiche une flaque de sang
 			var sang_instance = sang_scene.instantiate()
