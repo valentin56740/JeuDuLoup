@@ -19,7 +19,6 @@ var next_graze_time: float = 0.0
 # Remplacement des références uniques par des listes
 var dangerous_wolves: Array[RigidBody3D] = []
 var close_wolves: Array[RigidBody3D] = []
-var sheeps_arround: Array[RigidBody3D] = []
 
 enum Mode { WANDER, SAFE, FLEE } # Les différents modes des moutons 
 var mode = Mode.WANDER # Par défaut le mode errance
@@ -82,27 +81,12 @@ func _on_area_safe_body_entered(body: Node3D) -> void:
 		if mode == Mode.WANDER:
 			mode = Mode.SAFE
 	
-	if body.is_in_group("Mouton") and body is RigidBody3D:
-		var m := body as RigidBody3D
-		if not sheeps_arround.has(m):
-			sheeps_arround.append(m)
-		if mode == Mode.WANDER:
-			mode = Mode.SAFE
-	
 
 func _on_area_safe_body_exited(body: Node3D) -> void:
 	if body.is_in_group("Loup") and body is RigidBody3D:
 		var w := body as RigidBody3D
 		dangerous_wolves.erase(w)
-		# Si on n'est plus en danger "lointain" et pas d'agression, retour à WANDER
-		if mode == Mode.SAFE and dangerous_wolves.is_empty() and sheeps_arround.is_empty():
-			mode = Mode.WANDER
 			
-	if body.is_in_group("Mouton") and body is RigidBody3D:
-		var m := body as RigidBody3D
-		sheeps_arround.erase(m)
-		if mode == Mode.SAFE and dangerous_wolves.is_empty() and sheeps_arround.is_empty():
-			mode = Mode.WANDER
 
 func _on_area_danger_body_entered(body: Node3D) -> void:
 	if body.is_in_group("Loup") and body is RigidBody3D:
@@ -110,11 +94,6 @@ func _on_area_danger_body_entered(body: Node3D) -> void:
 		if not close_wolves.has(w):
 			close_wolves.append(w)
 		mode = Mode.FLEE
-	
-	if body.is_in_group("Mouton") and body is RigidBody3D:
-		var m := body as RigidBody3D
-		sheeps_arround.erase(m)
-
 
 
 func _on_area_danger_body_exited(body: Node3D) -> void:
@@ -186,21 +165,9 @@ func _compute_repulsion_dir(wolves: Array[RigidBody3D]) -> Vector3:
 func safe_avoid_wolves(delta: float) -> void:
 	animation_player.play("AnimalArmature|AnimalArmature|AnimalArmature|Walk")
 
-	if dangerous_wolves.is_empty() and sheeps_arround.is_empty():
+	if dangerous_wolves.is_empty():
 		mode = Mode.WANDER
 		return
-	
-	if dangerous_wolves.is_empty() and not sheeps_arround.is_empty(): 
-		var dir : Vector3
-		var closest_dist = INF 
-		for m in sheeps_arround:
-			var dist = global_position - m.global_position
-			if dist.length() < closest_dist: 
-				closest_dist = dist.length()
-				dir = dist 
-		
-
-		apply_central_force(dir.normalized() * safe_speed)
 	else: 
 	
 		var base_dir := _compute_repulsion_dir(dangerous_wolves)

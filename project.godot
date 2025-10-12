@@ -22,3 +22,8 @@ GlobalSettings="*res://GlobalSettings.gd"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/goutte.camera.trackball/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
