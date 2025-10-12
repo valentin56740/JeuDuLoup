@@ -300,7 +300,7 @@ func _on_body_entered(body: Node3D) -> void:
 			var sang_instance = sang_scene.instantiate()
 			sang_instance.global_position = body.global_position
 			get_parent().add_child(sang_instance)
-			print("🩸 Sang : le mouton a été mangé.")
+			print(" Sang : le mouton a été mangé.")
 		
 		# Supprime le mouton
 		body.queue_free()
