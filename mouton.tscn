@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://dvm0dcqgkax01"]
 
-[ext_resource type="Script" uid="uid://jbryb82qkfby" path="res://mouton_v2.gd" id="1_b5lwy"]
+[ext_resource type="Script" path="res://mouton_v2.gd" id="1_b5lwy"]
 [ext_resource type="PackedScene" uid="uid://c8v6g3mgv4m5n" path="res://Models/Sheep.glb" id="2_b5lwy"]
-[ext_resource type="Script" uid="uid://beegp26l2sa55" path="res://label_3d.gd" id="4_rlplv"]
+[ext_resource type="Script" path="res://label_3d.gd" id="4_rlplv"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rlplv"]
 size = Vector3(12.697144, 3.2703857, 96.621124)
@@ -52,7 +52,7 @@ shape = SubResource("CylinderShape3D_43wmm")
 
 [node name="Label3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9670236, 0)
-font_size = 600
+font_size = 400
 outline_size = 60
 script = ExtResource("4_rlplv")
 
