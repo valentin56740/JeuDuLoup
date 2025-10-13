@@ -1,7 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://dvm0dcqgkax01"]
+[gd_scene load_steps=8 format=3 uid="uid://dvm0dcqgkax01"]
 
-[ext_resource type="Script" uid="uid://cg28hbpsxdtb2" path="res://mouton.gd" id="1_43wmm"]
+[ext_resource type="Script" uid="uid://jbryb82qkfby" path="res://mouton_v2.gd" id="1_b5lwy"]
 [ext_resource type="PackedScene" uid="uid://c8v6g3mgv4m5n" path="res://Models/Sheep.glb" id="2_b5lwy"]
+[ext_resource type="Script" uid="uid://beegp26l2sa55" path="res://label_3d.gd" id="4_rlplv"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rlplv"]
+size = Vector3(12.697144, 3.2703857, 96.621124)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3vj0s"]
 size = Vector3(1.17, 1.8, 3.3214123)
@@ -19,30 +23,44 @@ axis_lock_angular_z = true
 contact_monitor = true
 max_contacts_reported = 3
 linear_damp_mode = 1
-linear_damp = 0.525
-script = ExtResource("1_43wmm")
+linear_damp = 0.8
+script = ExtResource("1_b5lwy")
 
 [node name="Sheep_Model" parent="." instance=ExtResource("2_b5lwy")]
+
+[node name="ChampDeVision" type="Area3D" parent="Sheep_Model"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Sheep_Model/ChampDeVision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31536865, 1.1351929, 47.810562)
+shape = SubResource("BoxShape3D_rlplv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0.10821223)
 shape = SubResource("BoxShape3D_3vj0s")
 
-[node name="Area3D" type="Area3D" parent="."]
+[node name="Danger" type="Area3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Danger"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CylinderShape3D_b5lwy")
 
-[node name="Save" type="Area3D" parent="."]
+[node name="Détection" type="Area3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Save"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Détection"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CylinderShape3D_43wmm")
 
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9670236, 0)
+font_size = 600
+outline_size = 60
+script = ExtResource("4_rlplv")
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_entered" from="Sheep_Model/ChampDeVision" to="." method="_on_champ_de_vision_body_entered"]
+[connection signal="body_exited" from="Sheep_Model/ChampDeVision" to="." method="_on_champ_de_vision_body_exited"]
 [connection signal="child_entered_tree" from="CollisionShape3D" to="." method="_on_collision_shape_3d_child_entered_tree"]
-[connection signal="body_entered" from="Area3D" to="." method="_on_area_danger_body_entered"]
-[connection signal="body_exited" from="Area3D" to="." method="_on_area_danger_body_exited"]
-[connection signal="body_entered" from="Save" to="." method="_on_area_safe_body_entered"]
-[connection signal="body_exited" from="Save" to="." method="_on_area_safe_body_exited"]
+[connection signal="body_entered" from="Danger" to="." method="_on_area_danger_body_entered"]
+[connection signal="body_exited" from="Danger" to="." method="_on_area_danger_body_exited"]
+[connection signal="body_entered" from="Détection" to="." method="_on_area_safe_body_entered"]
+[connection signal="body_exited" from="Détection" to="." method="_on_area_safe_body_exited"]
