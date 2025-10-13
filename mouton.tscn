@@ -1,11 +1,16 @@
-[gd_scene load_steps=8 format=3 uid="uid://dvm0dcqgkax01"]
+[gd_scene load_steps=9 format=3 uid="uid://dvm0dcqgkax01"]
 
 [ext_resource type="Script" uid="uid://jbryb82qkfby" path="res://mouton_v2.gd" id="1_b5lwy"]
 [ext_resource type="PackedScene" uid="uid://c8v6g3mgv4m5n" path="res://Models/Sheep.glb" id="2_b5lwy"]
+[ext_resource type="Script" uid="uid://dmegngjc32ndf" path="res://addons/convex_cone_shape3d_plugin/src/convex_cone_shape_3d.gd" id="3_rlplv"]
 [ext_resource type="Script" uid="uid://beegp26l2sa55" path="res://label_3d.gd" id="4_rlplv"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_rlplv"]
-size = Vector3(12.697144, 3.2703857, 96.621124)
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_g7a84"]
+points = PackedVector3Array(0, 134.54736, 0, 19.43128, -134.54736, 19.43128, 1.682608e-15, -134.54736, 27.47998, -19.43128, -134.54736, 19.43128, -27.47998, -134.54736, 3.365216e-15, -19.43128, -134.54736, -19.43128, -5.047824e-15, -134.54736, -27.47998, 19.43128, -134.54736, -19.43128, 27.47998, -134.54736, -6.730432e-15)
+script = ExtResource("3_rlplv")
+height = 269.09474182128906
+radius = 27.47998
+metadata/_custom_type_script = "uid://dmegngjc32ndf"
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3vj0s"]
 size = Vector3(1.17, 1.8, 3.3214123)
@@ -31,8 +36,8 @@ script = ExtResource("1_b5lwy")
 [node name="ChampDeVision" type="Area3D" parent="Sheep_Model"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sheep_Model/ChampDeVision"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31536865, 1.1351929, 47.810562)
-shape = SubResource("BoxShape3D_rlplv")
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0.315, 1.0824322, 135.40286)
+shape = SubResource("ConvexPolygonShape3D_g7a84")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0.10821223)
