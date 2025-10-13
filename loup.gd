@@ -204,7 +204,7 @@ func _deplacement():
 		
 		# Si on a une cible valide
 		if cible != null:
-			print("Cas 1 : mouton proche")
+			#print("Cas 1 : mouton proche")
 			cible_lointaine_actuelle = null  # Annule la cible lointaine
 			
 			# Calcule la distance à la cible
@@ -235,7 +235,7 @@ func _deplacement():
 		# Vérifie qu'elle n'est pas réservée par un autre loup
 		if not _est_reserve_par_autre(cible_lointaine_actuelle):
 			_tourner_vers_cible(cible_lointaine_actuelle.global_position, delta)
-			print("Cas 2 : mouton loin")
+			#print("Cas 2 : mouton loin")
 			
 			# Applique la force pour se déplacer vers la cible lointaine
 			var direction = (cible_lointaine_actuelle.global_position - global_position).normalized()
@@ -268,7 +268,7 @@ func _deplacement():
 	# ===== PRIORITÉ 3 : MODE RECHERCHE =====
 	# Aucune cible disponible, le loup tourne sur place pour chercher
 	cible_lointaine_actuelle = null
-	print("Recherche")
+	#print("Recherche")
 	
 	# Rotation continue pour balayer la zone
 	rotation.y += search_rotation_speed * delta
@@ -298,9 +298,10 @@ func _on_body_entered(body: Node3D) -> void:
 		else:
 			# Mode sang : affiche une flaque de sang
 			var sang_instance = sang_scene.instantiate()
-			sang_instance.global_position = body.global_position
+			print("Spawn sang à :", body.global_position)
+			sang_instance.global_position = Vector3(body.global_position.x, 4.5, body.global_position.z)
 			get_parent().add_child(sang_instance)
-			print(" Sang : le mouton a été mangé.")
+
 		
 		# Supprime le mouton
 		body.queue_free()

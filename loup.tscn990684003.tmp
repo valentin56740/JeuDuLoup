@@ -1,0 +1,46 @@
+[gd_scene load_steps=6 format=3 uid="uid://o7ise5esa53q"]
+
+[ext_resource type="Script" uid="uid://c7pkm2g3ffw76" path="res://loup.gd" id="1_xcdia"]
+[ext_resource type="PackedScene" uid="uid://btyye0aqrfc73" path="res://Wolf.glb" id="2_3elve"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3elve"]
+size = Vector3(1, 1.848999, 2.5632324)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_xcdia"]
+radius = 10.172792
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xcdia"]
+radius = 7.409
+height = 162.9151
+
+[node name="Loup" type="RigidBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_z = true
+contact_monitor = true
+max_contacts_reported = 3
+script = ExtResource("1_xcdia")
+
+[node name="WolfModel" parent="." instance=ExtResource("2_3elve")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93963623, 0.0010986328)
+shape = SubResource("BoxShape3D_3elve")
+
+[node name="ZoneProche" type="Area3D" parent="."]
+
+[node name="Zone" type="CollisionShape3D" parent="ZoneProche"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("SphereShape3D_xcdia")
+
+[node name="ChampsLoin" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChampsLoin"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 1.9999981, 83.37502)
+shape = SubResource("CapsuleShape3D_xcdia")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_entered" from="ZoneProche" to="." method="_on_zone_proche_body_entered"]
+[connection signal="body_exited" from="ZoneProche" to="." method="_on_zone_proche_body_exited"]
+[connection signal="body_entered" from="ChampsLoin" to="." method="_on_champs_loin_body_entered"]
+[connection signal="body_exited" from="ChampsLoin" to="." method="_on_champs_loin_body_exited"]
