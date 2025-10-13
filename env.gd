@@ -4,7 +4,9 @@ extends Node3D
 @export var spawn_area : CollisionShape3D
 @export var cameras : Array[Camera3D] = [] 
 @export var loups = 3
-@export var moutons = 60  
+@export var moutons = 60 
+
+@onready var all_moutons: Array[RigidBody3D] = []
 
 var index = 0 
 var mouton = preload("res://mouton.tscn")
@@ -20,6 +22,7 @@ func update_camera():
 
 
 
+
 func spawn():
 	var shape = spawn_area.shape as BoxShape3D
 	var extents = shape.size / 2.0
@@ -32,6 +35,7 @@ func spawn():
 		)
 		
 		var m = mouton.instantiate()
+		all_moutons.append(m)
 		add_child(m)  # Ajoute-le avant de changer la position (sinon global/local mélange)
 		m.global_position = spawn_area.global_position + pos
 		
