@@ -80,8 +80,12 @@ Les moutons sont des agents autonomes capables de percevoir les loups proches et
    - Activé lorsqu’un loup entre dans une **zone dangereuse** (proximité immédiate).  
    - Le mouton fuit rapidement (`flee_speed`) dans la direction opposée au loup.  
    - L’animation passe automatiquement en *Run*.  
-   - Une fois le danger éloigné, il revient au mode “Safe” ou “Wander”.  
-
+   - Une fois le danger éloigné, il revient au mode “Safe” ou “Wander”.
+   - 
+4. **Mode Follow (Suivre)**  
+   - Lorsque le mouton détecte plus de moutons dans son champ de vision que proche de lui.
+   - Le mouton va donc chercher à se regrouper une fois qu'il est plus inquiété par un loup, les modes safe et flee restent prioritaires.   
+   - Une fois regroupé le mouton repasse en mode Wander. 
 ---
 
 ## 🧠 Système Multi-Agent
